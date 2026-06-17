@@ -1,0 +1,3 @@
+clave_ec2           = "tu-key-pair-name"
+password_base_datos = "TuClaveSegura123"
+nombre_base_datos   = "despachodb"

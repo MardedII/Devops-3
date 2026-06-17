@@ -1,0 +1,41 @@
+#Despliegue
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-venta
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend-venta 
+  template:
+    metadata:
+      labels:
+        app: backend-venta
+    spec:
+      containers:
+        - name: backend
+          image: 637423579746.dkr.ecr.us-east-1.amazonaws.com/despacho-project-backend-ventas
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql:3306/despacho-venta
+            - name: SPRING_DATASOURCE_USERNAME
+              value: root
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: root
+---
+#Service:
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-venta
+spec:
+  selector:
+    app: backend-venta 
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP

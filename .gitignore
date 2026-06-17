@@ -1,0 +1,13 @@
+.vscode/
+# Ignore Terraform internal files
+.terraform/
+.terraform.lock.hcl
+
+# Ignore state files
+*.tfstate
+*.tfstate.backup
+
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
