@@ -32,16 +32,28 @@ jobs:
       - name: Build y push del backend despachos
         run: |
           docker build --platform linux/amd64 \
+<<<<<<< HEAD
+            -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.PROJECT_NAME }}-backend-despachos:latest \
+            ./backend/back-despacho-service
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.PROJECT_NAME }}-backend-despachos:latest
+=======
             -t ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend-despachos:latest \
             ./backend/back-despacho-service
           docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend-despachos:latest
+>>>>>>> cd23041d9393712689ec0176745ff1e0410915cd
 
       - name: Build y push del basckend ventas
         run: |
           docker build --platform linux/amd64 \
+<<<<<<< HEAD
+            -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.PROJECT_NAME }}-backend-ventas:latest \
+            ./backend/back-venta-service
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.PROJECT_NAME }}-backend-ventas:latest
+=======
             -t ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend-ventas:latest \
             ./backend/back-venta-service
           docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend-ventas:latest
+>>>>>>> cd23041d9393712689ec0176745ff1e0410915cd
 
       - name: Build y push del frontend
         run: |
