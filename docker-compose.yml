@@ -1,15 +1,19 @@
+version: '3.8'
+
 services:
   mysql:
     image: mysql:8
     environment:
-      MYSQL_ROOT_PASSWORD = root123
-      MYSQL_DATABASE = despacho_db
-      MYSQL_USER =    despacho_user
-      MYSQL_PASSWORD =    despacho_pass
+      MYSQL_ROOT_PASSWORD: "root123"
+      MYSQL_DATABASE: "despacho_db"
+      MYSQL_USER: "despacho_user"
+      MYSQL_PASSWORD: "despacho_pass"
     ports:
       - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -20,33 +24,34 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/despacho_db
-      SPRING_DATASOURCE_USERNAME: despachos
-      SPRING_DATASOURCE_PASSWORD: des123
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/despacho_db"
+      SPRING_DATASOURCE_USERNAME: "despacho_user"
+      SPRING_DATASOURCE_PASSWORD: "despacho_pass"
     depends_on:
       mysql:
         condition: service_healthy
 
   back-ventas:
     build: ./backend/back-venta-service
-    image: despachos-frontend:1.0
+    image: ventas-backend:1.0
     ports:
-      - "8081:8080" 
+      - "8081:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/despacho_db
-      SPRING_DATASOURCE_USERNAME: ventas
-      SPRING_DATASOURCE_PASSWORD: ven123
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/despacho_db"
+      SPRING_DATASOURCE_USERNAME: "despacho_user"
+      SPRING_DATASOURCE_PASSWORD: "despacho_pass"
     depends_on:
       mysql:
         condition: service_healthy
 
   frontend:
     build: ./frontend
-    image: ventas-backend:1.0               
+    image: despacho-frontend:1.0
     ports:
       - "80:80"
     depends_on:
-      - backend
+      - back-despachos
+      - back-ventas
 
 volumes:
   mysql_data:
