@@ -21,3 +21,7 @@ resource "aws_eks_node_group" "workers" {
   instance_types = ["t3.medium"]
   capacity_type  = "ON_DEMAND"
 }
+
+data "aws_iam_role" "labrole" {
+  name = "LabRole"
+}
