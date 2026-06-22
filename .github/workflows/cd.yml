@@ -9,7 +9,7 @@ on:
 env:
   AWS_REGION: us-east-1
   PROJECT_NAME: despacho-project
-  EKS_CLUSTER_NAME: despacho-project-cluster
+  EKS_CLUSTER_NAME: despacho-cluster
 
 jobs:
   deploy:
