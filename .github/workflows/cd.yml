@@ -27,8 +27,7 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
 
-
-        - name: Configurar Terraform
+      - name: Configurar Terraform
         uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init y Apply
