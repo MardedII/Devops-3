@@ -27,6 +27,16 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
 
+
+        - name: Configurar Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init y Apply
+        working-directory: infra/terraform
+        run: |
+          terraform init
+          terraform apply -auto-approve
+
       - name: Login en ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
