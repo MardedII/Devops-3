@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: 637423579746.dkr.ecr.us-east-1.amazonaws.com/despacho-project-frontend
+          image: 637423579746.dkr.ecr.us-east-1.amazonaws.com/despacho-project-frontend:latest
           #no descargar la imagen desde Docker Hub, sinó que local.
           imagePullPolicy: Always
           ports:
