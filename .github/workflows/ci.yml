@@ -4,11 +4,9 @@ on:
   pull_request:
     branches:
       - main
-      - develop
   push:
     branches:
       - main
-      - develop
 
 permissions:
   contents: read
@@ -104,26 +102,25 @@ jobs:
 
       - name: Preparar archivos .env
         run: |
-          cp .env.example .env || true
-          cp backend/back-despacho-service/.env.example backend/back-despacho-service/.env || true
-          cp backend/back-venta-service/.env.example backend/back-venta-service/.env || true
+          cp .env.example .env
+          cp backend/back-despacho-service/.env.example backend/back-despacho-service/.env
+          cp backend/back-venta-service/.env.example backend/back-venta-service/.env
 
       - name: Validar compose
-        run: |
-          # Seteamos las variables directo en el entorno shell para blindar el mapeo del yaml
-          export MYSQL_ROOT_PASSWORD=despacho_root_2026
-          export MYSQL_DATABASE=despachodb
-          export MYSQL_USER=despacho_app
-          export MYSQL_PASSWORD=despacho_app_2026
-          docker compose config
+        env:
+          MYSQL_ROOT_PASSWORD: despacho_root_2026
+          MYSQL_DATABASE: despachodb
+          MYSQL_USER: despacho_app
+          MYSQL_PASSWORD: despacho_app_2026
+        run: docker compose config
 
       - name: Construir imagenes
-        run: |
-          export MYSQL_ROOT_PASSWORD=despacho_root_2026
-          export MYSQL_DATABASE=despachodb
-          export MYSQL_USER=despacho_app
-          export MYSQL_PASSWORD=despacho_app_2026
-          docker compose build
+        env:
+          MYSQL_ROOT_PASSWORD: despacho_root_2026
+          MYSQL_DATABASE: despachodb
+          MYSQL_USER: despacho_app
+          MYSQL_PASSWORD: despacho_app_2026
+        run: docker compose build
 
   terraform:
     name: Terraform
