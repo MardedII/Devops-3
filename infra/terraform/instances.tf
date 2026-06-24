@@ -11,7 +11,7 @@ data "aws_ami" "amazon_linux" {
 resource "aws_instance" "db" {
   ami                    = data.aws_ami.amazon_linux.id
   instance_type          = "t3.micro"
-  subnet_id              = aws_subnet.public.id
+  subnet_id              = aws_subnet.eks_subnet_1.id # <-- AQUÍ ESTÁ EL CAMBIO
   vpc_security_group_ids = [aws_security_group.main.id]
   key_name               = var.clave_ec2
 

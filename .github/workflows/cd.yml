@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - main
+      - develop
 
 env:
   AWS_REGION: us-east-1
   PROJECT_NAME: despacho-project
+  EKS_CLUSTER_NAME: despacho-cluster
 
 jobs:
   deploy:
@@ -15,15 +17,30 @@ jobs:
 
     steps:
       - name: Checkout del código
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configurar credenciales AWS
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # Obligatorio si usas credenciales temporales/Academy
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Configurar Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init y Apply
+        working-directory: infra/terraform
+        env:
+          TF_VAR_region_despliegue: ${{ env.AWS_REGION }}
+          TF_VAR_nombre_proyecto: ${{ env.PROJECT_NAME }}
+          TF_VAR_clave_ec2: "vockey"
+          TF_VAR_password_base_datos: "TuClaveSegura123"
+          TF_VAR_nombre_base_datos: "despachodb"
+        run: |
+          terraform init
+          terraform apply -auto-approve
 
       - name: Login en ECR
         id: login-ecr
@@ -32,41 +49,49 @@ jobs:
       - name: Build y push del backend despachos
         run: |
           docker build --platform linux/amd64 \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend-despachos:${{ github.sha }} \
             -t ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend-despachos:latest \
             ./backend/back-despacho-service
           docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend-despachos:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend-despachos:${{ github.sha }}
 
       - name: Build y push del backend ventas
         run: |
           docker build --platform linux/amd64 \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend-ventas:${{ github.sha }} \
             -t ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend-ventas:latest \
             ./backend/back-venta-service
           docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend-ventas:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend-ventas:${{ github.sha }}
 
       - name: Build y push del frontend
         run: |
           docker build --platform linux/amd64 \
+            -t ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-frontend:${{ github.sha }} \
             -t ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-frontend:latest \
             ./frontend
           docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-frontend:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-frontend:${{ github.sha }}
 
-      - name: Forzar nuevo despliegue en ECS (Ejemplo para servicio Despachos)
-        run: |
-          aws ecs update-service \
-            --cluster ${{ env.PROJECT_NAME }}-cluster \
-            --service service-despachos \
-            --force-new-deployment
+      # --- CONEXIÓN Y ACTUALIZACIÓN EN EKS (KUBERNETES) ---
 
-      - name: Forzar nuevo despliegue en ECS (Ejemplo para servicio Ventas)
-        run: |
-          aws ecs update-service \
-            --cluster ${{ env.PROJECT_NAME }}-cluster \
-            --service service-ventas \
-            --force-new-deployment
+      - name: Instalar kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
 
-      - name: Forzar nuevo despliegue en ECS (Ejemplo para servicio Frontend)
+      - name: Actualizar el kubeconfig para conectarse a EKS
         run: |
-          aws ecs update-service \
-            --cluster ${{ env.PROJECT_NAME }}-cluster \
-            --service service-frontend \
-            --force-new-deployment
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+
+      - name: Aplicar y Actualizar Imágenes en EKS
+        run: |
+          # 1. Aplicar manifiestos si se cuenta con la carpeta infra/k8s en el repositorio
+          if [ -d "infra/k8s" ]; then
+            kubectl apply -f infra/k8s/
+          fi
+          
+          # 2. Forzar la actualización de contenedores con la versión exacta generada por el commit para refrescar los pods
+          kubectl set image deployment/despachos-deployment despachos-container=${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend-despachos:${{ github.sha }} --background=true || echo "Deployment despachos no encontrado, omitiendo..."
+          kubectl set image deployment/ventas-deployment ventas-container=${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend-ventas:${{ github.sha }} --background=true || echo "Deployment ventas no encontrado, omitiendo..."
+          kubectl set image deployment/frontend-deployment frontend-container=${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-frontend:${{ github.sha }} --background=true || echo "Deployment frontend no encontrado, omitiendo..."
