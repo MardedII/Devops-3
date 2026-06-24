@@ -44,6 +44,9 @@ kubectl get svc
 # Revisar los registros internos de un contenedor para detectar fallos
 kubectl logs <nombre_del_pod>
 
+# Ejemplo con el Pod del Frontend:
+kubectl logs frontend-5b96665cc5-4mz8x
+
 # Limpiar y eliminar todos los recursos despliega-dos en el clúster
 kubectl delete -f infra/k8s/
 
