@@ -27,20 +27,6 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Configurar Terraform
-        uses: hashicorp/setup-terraform@v2
-
-      - name: Terraform Init y Apply
-        working-directory: infra/terraform
-        env:
-          TF_VAR_region_despliegue: ${{ env.AWS_REGION }}
-          TF_VAR_nombre_proyecto: ${{ env.PROJECT_NAME }}
-          TF_VAR_clave_ec2: "vockey"
-          TF_VAR_password_base_datos: "TuClaveSegura123"
-          TF_VAR_nombre_base_datos: "despachodb"
-        run: |
-          terraform init
-          terraform apply -auto-approve
 
       - name: Login en ECR
         id: login-ecr
